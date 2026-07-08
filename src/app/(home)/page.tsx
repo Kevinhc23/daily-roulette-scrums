@@ -479,7 +479,7 @@ export default function Home() {
       )
       .join("")
 
-    printWindow.document.write(`
+    const html = `
       <!doctype html>
       <html lang="es">
         <head>
@@ -515,12 +515,24 @@ export default function Home() {
           </table>
         </body>
       </html>
-    `)
+    `
+
+    printWindow.document.open()
+    printWindow.document.write(html)
     printWindow.document.close()
-    printWindow.focus()
-    window.setTimeout(() => {
+
+    const triggerPrint = () => {
+      printWindow.focus()
       printWindow.print()
-    }, 300)
+    }
+
+    if (printWindow.document.readyState === "complete") {
+      window.setTimeout(triggerPrint, 200)
+    } else {
+      printWindow.addEventListener("load", () => {
+        window.setTimeout(triggerPrint, 200)
+      }, { once: true })
+    }
   }
 
   const saveNote = () => {
