@@ -934,57 +934,68 @@ export default function Home() {
                     )}
                   </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={markStarted}
-                      disabled={!currentUser}
-                    >
-                      Comenzó
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary-destructive"
-                      size="sm"
-                      onClick={markBlocked}
-                      disabled={!currentUser}
-                    >
-                      Marcar bloqueado
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={toggleUnavailable}
-                      disabled={!currentUser}
-                    >
-                      {currentStatus?.unavailable ? "Marcar disponible" : "Marcar no disponible"}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={clearBlocked}
-                      disabled={!currentUser}
-                    >
-                      Quitar bloqueo
-                    </Button>
-                  </div>
-
-                  <div className="mt-4 grid gap-3 text-sm text-slate-600">
-                    <div className="flex items-center justify-between gap-4">
-                      <span>Inicio</span>
-                      <span className="font-medium text-slate-900">
-                        {formatDate(currentStatus?.startedAt)}
-                      </span>
+                  <div className="mt-4 space-y-4">
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        Estado
+                      </p>
+                      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={markStarted}
+                          disabled={!currentUser}
+                          className="w-full justify-center whitespace-normal text-center leading-tight"
+                        >
+                          Comenzó
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary-destructive"
+                          size="sm"
+                          onClick={markBlocked}
+                          disabled={!currentUser}
+                          className="w-full justify-center whitespace-normal text-center leading-tight"
+                        >
+                          Bloqueado
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={toggleUnavailable}
+                          disabled={!currentUser}
+                          className="w-full justify-center whitespace-normal text-center leading-tight"
+                        >
+                          {currentStatus?.unavailable ? "Disponible" : "No disponible"}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={clearBlocked}
+                          disabled={!currentUser}
+                          className="w-full justify-center whitespace-normal text-center leading-tight"
+                        >
+                          Quitar bloqueo
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <span>Ultima actualizacion</span>
-                      <span className="font-medium text-slate-900">
-                        {formatDate(currentStatus?.updatedAt)}
-                      </span>
+
+                    <div className="grid gap-3 text-sm text-slate-600">
+                      <div className="flex items-center justify-between gap-4">
+                        <span>Inicio</span>
+                        <span className="font-medium text-slate-900">
+                          {formatDate(currentStatus?.startedAt)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <span>Ultima actualizacion</span>
+                        <span className="font-medium text-slate-900">
+                          {formatDate(currentStatus?.updatedAt)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1004,50 +1015,53 @@ export default function Home() {
                   />
                 </label>
 
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="lg"
-                  onClick={saveNote}
-                  disabled={!currentUser}
-                  className="justify-center"
-                >
-                  Guardar nota
-                </Button>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="lg"
-                    onClick={exportNotesMarkdown}
-                    disabled={!storageReady || noteEntries.length === 0}
-                    className="justify-center"
-                  >
-                    Exportar Markdown
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="lg"
-                    onClick={exportNotesPdf}
-                    disabled={!storageReady || noteEntries.length === 0}
-                    className="justify-center"
-                  >
-                    Exportar PDF
-                  </Button>
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Notas
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="lg"
+                      onClick={saveNote}
+                      disabled={!currentUser}
+                      className="w-full justify-center"
+                    >
+                      Guardar nota
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary-destructive"
+                      size="lg"
+                      onClick={clearAllNotes}
+                      disabled={noteEntries.length === 0}
+                      className="w-full justify-center"
+                    >
+                      Vaciar notas
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="lg"
+                      onClick={exportNotesMarkdown}
+                      disabled={!storageReady || noteEntries.length === 0}
+                      className="w-full justify-center"
+                    >
+                      Exportar Markdown
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="lg"
+                      onClick={exportNotesPdf}
+                      disabled={!storageReady || noteEntries.length === 0}
+                      className="w-full justify-center"
+                    >
+                      Exportar PDF
+                    </Button>
+                  </div>
                 </div>
-
-                <Button
-                  type="button"
-                  variant="secondary-destructive"
-                  size="lg"
-                  onClick={clearAllNotes}
-                  disabled={noteEntries.length === 0}
-                  className="justify-center"
-                >
-                  Vaciar notas
-                </Button>
               </div>
             </section>
 
