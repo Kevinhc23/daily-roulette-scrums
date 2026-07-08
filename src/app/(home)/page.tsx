@@ -61,6 +61,7 @@ export default function Home() {
   const [isSpinning, setIsSpinning] = useState(false)
   const [statusMap, setStatusMap] = useState<UserStatusMap>({})
   const [drawnUserIds, setDrawnUserIds] = useState<string[]>([])
+  const [storageReady, setStorageReady] = useState(false)
   const [form, setForm] = useState<CreateUserForm>(initialForm)
 
   const intervalRef = useRef<number | null>(null)
@@ -121,6 +122,7 @@ export default function Home() {
     const timeout = window.setTimeout(() => {
       const raw = window.localStorage.getItem(STORAGE_KEY)
       hasLoadedStatusRef.current = true
+      setStorageReady(true)
       if (!raw) return
 
       try {
@@ -389,6 +391,14 @@ export default function Home() {
     return lines.join("\n")
   }
 
+  const escapeHtml = (value: string) =>
+    value
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;")
+
   const exportNotesMarkdown = () => {
     const markdown = buildNotesMarkdown()
     const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" })
@@ -414,12 +424,12 @@ export default function Home() {
       .map(
         ({ user, status }) => `
           <tr>
-            <td>${user.name}</td>
-            <td>${user.team.replaceAll("_", " ")}</td>
-            <td>${user.role.replaceAll("_", " ")}</td>
-            <td>${status?.blocked ? "Blocked" : "Active"}</td>
-            <td>${status?.startedAt ? formatDate(status.startedAt) : "Sin fecha"}</td>
-            <td>${status?.note?.trim() ? status.note.trim() : "Sin nota"}</td>
+            <td>${escapeHtml(user.name)}</td>
+            <td>${escapeHtml(user.team.replaceAll("_", " "))}</td>
+            <td>${escapeHtml(user.role.replaceAll("_", " "))}</td>
+            <td>${escapeHtml(status?.blocked ? "Blocked" : "Active")}</td>
+            <td>${escapeHtml(status?.startedAt ? formatDate(status.startedAt) : "Sin fecha")}</td>
+            <td>${escapeHtml(status?.note?.trim() ? status.note.trim() : "Sin nota")}</td>
           </tr>
         `,
       )
@@ -459,17 +469,14 @@ export default function Home() {
               ${rows || "<tr><td colspan='6'>No notes available</td></tr>"}
             </tbody>
           </table>
-          <script>
-            window.onload = () => {
-              window.focus();
-              window.print();
-            };
-            window.onafterprint = () => window.close();
-          </script>
         </body>
       </html>
     `)
     printWindow.document.close()
+    printWindow.focus()
+    window.setTimeout(() => {
+      printWindow.print()
+    }, 300)
   }
 
   const saveNote = () => {
@@ -991,7 +998,7 @@ export default function Home() {
                     variant="secondary"
                     size="lg"
                     onClick={exportNotesMarkdown}
-                    disabled={noteEntries.length === 0}
+                    disabled={!storageReady || noteEntries.length === 0}
                     className="justify-center"
                   >
                     Exportar Markdown
@@ -1001,7 +1008,7 @@ export default function Home() {
                     variant="secondary"
                     size="lg"
                     onClick={exportNotesPdf}
-                    disabled={noteEntries.length === 0}
+                    disabled={!storageReady || noteEntries.length === 0}
                     className="justify-center"
                   >
                     Exportar PDF
