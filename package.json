@@ -4,9 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "predev": "pnpm prisma:generate",
     "build": "next build",
+    "prebuild": "pnpm prisma:generate",
     "start": "next start",
-    "lint": "eslint"
+    "prestart": "pnpm prisma:generate",
+    "lint": "eslint",
+    "postinstall": "pnpm prisma:generate",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
   },
   "dependencies": {
     "@cloudflare/kumo": "^2.6.0",
