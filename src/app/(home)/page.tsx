@@ -507,6 +507,29 @@ export default function Home() {
     }
   }
 
+  const clearAllNotes = () => {
+    const confirmed = window.confirm("Vaciar todas las notas registradas?")
+    if (!confirmed) return
+
+    setStatusMap((current) => {
+      const nextStatus: UserStatusMap = {}
+
+      for (const [userId, status] of Object.entries(current)) {
+        nextStatus[userId] = {
+          ...status,
+          note: "",
+          updatedAt: new Date().toISOString(),
+        }
+      }
+
+      return nextStatus
+    })
+
+    if (noteRef.current) {
+      noteRef.current.value = ""
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(32,78,224,0.18),_transparent_34%),linear-gradient(180deg,_#09111f_0%,_#0b1220_42%,_#f4f7fb_42%,_#f4f7fb_100%)] text-slate-900">
       <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
@@ -971,7 +994,7 @@ export default function Home() {
                     Nota de seguimiento
                   </span>
                   <textarea
-                    key={currentUser?.id ?? "no-user"}
+                    key={`${currentUser?.id ?? "no-user"}-${currentStatus?.note ?? ""}`}
                     ref={noteRef}
                     defaultValue={currentStatus?.note ?? ""}
                     rows={6}
@@ -1014,6 +1037,17 @@ export default function Home() {
                     Exportar PDF
                   </Button>
                 </div>
+
+                <Button
+                  type="button"
+                  variant="secondary-destructive"
+                  size="lg"
+                  onClick={clearAllNotes}
+                  disabled={noteEntries.length === 0}
+                  className="justify-center"
+                >
+                  Vaciar notas
+                </Button>
               </div>
             </section>
 
