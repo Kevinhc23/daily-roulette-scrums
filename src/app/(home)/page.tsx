@@ -804,7 +804,7 @@ export default function Home() {
           </div>
 
           <div className="space-y-6">
-            <section className="sticky top-6 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60">
+            <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-semibold">Ruleta</h2>
