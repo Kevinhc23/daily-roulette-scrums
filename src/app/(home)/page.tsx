@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react"
-import { Badge, Button } from "@cloudflare/kumo"
+import { Badge, Button, Dialog } from "@cloudflare/kumo"
 import { Role, TeamnName, type User } from "@/generated/prisma/browser"
 
 type ApiResponse<T> = {
@@ -64,6 +64,8 @@ export default function Home() {
   const [storageReady, setStorageReady] = useState(false)
   const [now, setNow] = useState(() => Date.now())
   const [form, setForm] = useState<CreateUserForm>(initialForm)
+  const [deleteDialogUser, setDeleteDialogUser] = useState<User | null>(null)
+  const [isClearNotesDialogOpen, setIsClearNotesDialogOpen] = useState(false)
 
   const intervalRef = useRef<number | null>(null)
   const timeoutRef = useRef<number | null>(null)
@@ -333,14 +335,6 @@ export default function Home() {
   }
 
   const handleDeleteUser = async (userId: string) => {
-    const userToDelete = users.find((user) => user.id === userId)
-    if (!userToDelete) return
-
-    const confirmed = window.confirm(
-      `Eliminar a ${userToDelete.name} del roster?`,
-    )
-    if (!confirmed) return
-
     setLoadingAction(true)
     setError(null)
 
@@ -575,9 +569,6 @@ export default function Home() {
   }
 
   const clearAllNotes = () => {
-    const confirmed = window.confirm("Vaciar todas las notas registradas?")
-    if (!confirmed) return
-
     setStatusMap((current) => {
       const nextStatus: UserStatusMap = {}
 
@@ -595,6 +586,37 @@ export default function Home() {
     if (noteRef.current) {
       noteRef.current.value = ""
     }
+  }
+
+  const openDeleteDialog = (userId: string) => {
+    const userToDelete = users.find((user) => user.id === userId)
+    if (!userToDelete) return
+
+    setDeleteDialogUser(userToDelete)
+  }
+
+  const closeDeleteDialog = () => {
+    setDeleteDialogUser(null)
+  }
+
+  const confirmDeleteUser = async () => {
+    if (!deleteDialogUser) return
+
+    await handleDeleteUser(deleteDialogUser.id)
+    closeDeleteDialog()
+  }
+
+  const openClearNotesDialog = () => {
+    setIsClearNotesDialogOpen(true)
+  }
+
+  const closeClearNotesDialog = () => {
+    setIsClearNotesDialogOpen(false)
+  }
+
+  const confirmClearAllNotes = () => {
+    clearAllNotes()
+    closeClearNotesDialog()
   }
 
   return (
@@ -907,7 +929,7 @@ export default function Home() {
                             size="sm"
                             onClick={(event) => {
                               event.stopPropagation()
-                              void handleDeleteUser(user.id)
+                              openDeleteDialog(user.id)
                             }}
                           >
                             Eliminar
@@ -1139,7 +1161,7 @@ export default function Home() {
                       type="button"
                       variant="secondary-destructive"
                       size="lg"
-                      onClick={clearAllNotes}
+                      onClick={openClearNotesDialog}
                       disabled={noteEntries.length === 0}
                       className="w-full justify-center"
                     >
@@ -1217,6 +1239,88 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <Dialog.Root
+        open={Boolean(deleteDialogUser)}
+        onOpenChange={(open) => {
+          if (!open) closeDeleteDialog()
+        }}
+        role="alertdialog"
+      >
+        <Dialog className="p-6 sm:p-8">
+          <div className="space-y-3">
+            <Dialog.Title className="text-xl font-semibold text-slate-900">
+              Eliminar usuario
+            </Dialog.Title>
+            <Dialog.Description className="text-sm text-slate-600">
+              {deleteDialogUser
+                ? `Vas a eliminar a ${deleteDialogUser.name} del roster. Esta acción no se puede deshacer.`
+                : "Vas a eliminar este usuario del roster. Esta acción no se puede deshacer."}
+            </Dialog.Description>
+          </div>
+
+          <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={closeDeleteDialog}
+              className="justify-center"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="secondary-destructive"
+              onClick={() => {
+                void confirmDeleteUser()
+              }}
+              loading={loadingAction}
+              className="justify-center"
+            >
+              Eliminar
+            </Button>
+          </div>
+        </Dialog>
+      </Dialog.Root>
+
+      <Dialog.Root
+        open={isClearNotesDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) closeClearNotesDialog()
+        }}
+        role="alertdialog"
+      >
+        <Dialog className="p-6 sm:p-8">
+          <div className="space-y-3">
+            <Dialog.Title className="text-xl font-semibold text-slate-900">
+              Vaciar notas
+            </Dialog.Title>
+            <Dialog.Description className="text-sm text-slate-600">
+              Se borrará el contenido de las notas registradas para el filtro actual. Esta acción
+              no elimina usuarios ni bloqueos.
+            </Dialog.Description>
+          </div>
+
+          <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={closeClearNotesDialog}
+              className="justify-center"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="secondary-destructive"
+              onClick={confirmClearAllNotes}
+              className="justify-center"
+            >
+              Vaciar notas
+            </Button>
+          </div>
+        </Dialog>
+      </Dialog.Root>
     </main>
   )
 }
