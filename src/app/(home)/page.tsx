@@ -62,6 +62,7 @@ export default function Home() {
   const [statusMap, setStatusMap] = useState<UserStatusMap>({})
   const [drawnUserIds, setDrawnUserIds] = useState<string[]>([])
   const [storageReady, setStorageReady] = useState(false)
+  const [now, setNow] = useState(() => Date.now())
   const [form, setForm] = useState<CreateUserForm>(initialForm)
 
   const intervalRef = useRef<number | null>(null)
@@ -88,6 +89,24 @@ export default function Home() {
   )
 
   const currentStatus = currentUser ? statusMap[currentUser.id] : undefined
+  const startedCountdown = currentStatus?.startedAt
+    ? (() => {
+        const startedAt = new Date(currentStatus.startedAt).getTime()
+        const elapsedMs = Math.max(0, now - startedAt)
+        const remainingMs = Math.max(0, 60_000 - elapsedMs)
+        const totalSeconds = Math.ceil(remainingMs / 1000)
+        const minutes = Math.floor(totalSeconds / 60)
+          .toString()
+          .padStart(2, "0")
+        const seconds = (totalSeconds % 60).toString().padStart(2, "0")
+
+        return {
+          remainingMs,
+          label: `${minutes}:${seconds}`,
+          finished: remainingMs === 0,
+        }
+      })()
+    : null
   const blockedUsers = useMemo(
     () => users.filter((user) => statusMap[user.id]?.blocked),
     [statusMap, users],
@@ -212,6 +231,16 @@ export default function Home() {
   useEffect(() => {
     return () => {
       clearSpinTimers()
+    }
+  }, [])
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setNow(Date.now())
+    }, 1000)
+
+    return () => {
+      window.clearInterval(interval)
     }
   }, [])
 
@@ -1012,6 +1041,20 @@ export default function Home() {
                         <span>Inicio</span>
                         <span className="font-medium text-slate-900">
                           {formatDate(currentStatus?.startedAt)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <span>Tiempo restante</span>
+                        <span
+                          className={`font-medium ${
+                            startedCountdown?.finished ? "text-rose-600" : "text-slate-900"
+                          }`}
+                        >
+                          {currentStatus?.startedAt
+                            ? startedCountdown?.finished
+                              ? "00:00"
+                              : startedCountdown?.label
+                            : "Sin inicio"}
                         </span>
                       </div>
                       <div className="flex items-center justify-between gap-4">
