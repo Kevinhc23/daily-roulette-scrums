@@ -242,13 +242,13 @@ export default function Home() {
   const updateStatus = (patch: Partial<UserStatus>) => {
     if (!currentUser) return
 
-        setStatusMap((current) => {
-          const previous = current[currentUser.id] ?? {
-            blocked: false,
-            unavailable: false,
-            note: "",
-            updatedAt: new Date().toISOString(),
-          }
+    setStatusMap((current) => {
+      const previous = current[currentUser.id] ?? {
+        blocked: false,
+        unavailable: false,
+        note: "",
+        updatedAt: new Date().toISOString(),
+      }
 
       return {
         ...current,
@@ -535,7 +535,7 @@ export default function Home() {
       <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
         <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/90 p-6 text-white shadow-2xl shadow-slate-950/40 backdrop-blur">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl space-y-4">
+            <div className="max-w-2xl space-y-4">
               <Badge variant="blue" appearance="filled" className="uppercase tracking-[0.22em]">
                 Daily roulette
               </Badge>
@@ -550,24 +550,50 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Usuarios</p>
-                <p className="mt-1 text-2xl font-semibold">{users.length}</p>
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                <div className="min-w-0 rounded-3xl border border-white/10 bg-white/5 p-4 shadow-inner shadow-black/10">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Usuarios</p>
+                    <span className="h-2.5 w-2.5 rounded-full bg-sky-400/80" />
+                  </div>
+                  <p className="mt-4 text-4xl font-semibold leading-none text-white">{users.length}</p>
+                </div>
+
+                <div className="min-w-0 rounded-3xl border border-white/10 bg-white/5 p-4 shadow-inner shadow-black/10">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Disponibles</p>
+                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
+                  </div>
+                  <p className="mt-4 text-4xl font-semibold leading-none text-white">
+                    {eligibleUsers.length}
+                  </p>
+                </div>
+
+                <div className="min-w-0 rounded-3xl border border-white/10 bg-white/5 p-4 shadow-inner shadow-black/10">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Bloqueados</p>
+                    <span className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
+                  </div>
+                  <p className="mt-4 text-4xl font-semibold leading-none text-white">
+                    {blockedUsers.length}
+                  </p>
+                </div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Disponibles</p>
-                <p className="mt-1 text-2xl font-semibold">{eligibleUsers.length}</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Bloqueados</p>
-                <p className="mt-1 text-2xl font-semibold">{blockedUsers.length}</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Filtro</p>
-                <p className="mt-1 text-2xl font-semibold">
-                  {selectedTeam === "ALL" ? "Todos" : selectedTeam}
-                </p>
+
+              <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 p-4 shadow-inner shadow-black/10 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Filtro activo</p>
+                  <p className="mt-2 text-sm text-slate-300">Team que participa en la ruleta</p>
+                </div>
+                <div className="inline-flex max-w-full items-center rounded-full border border-white/10 bg-slate-950/50 px-4 py-2">
+                  <span
+                    className="max-w-[16rem] truncate text-sm font-semibold text-white sm:max-w-[20rem]"
+                    title={selectedTeam === "ALL" ? "Todos los teams" : selectedTeam.replaceAll("_", " ")}
+                  >
+                    {selectedTeam === "ALL" ? "Todos los teams" : selectedTeam.replaceAll("_", " ")}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -736,11 +762,10 @@ export default function Home() {
                         }}
                         role="button"
                         tabIndex={0}
-                        className={`group rounded-2xl border p-4 text-left transition ${
-                          isSelected
-                            ? "border-blue-400 bg-blue-50 shadow-sm shadow-blue-100"
-                            : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white"
-                        }`}
+                        className={`group rounded-2xl border p-4 text-left transition ${isSelected
+                          ? "border-blue-400 bg-blue-50 shadow-sm shadow-blue-100"
+                          : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white"
+                          }`}
                       >
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div className="min-w-0">
@@ -860,9 +885,8 @@ export default function Home() {
                 <div className="mt-4 flex min-h-32 items-center justify-center rounded-[1.25rem] border border-white/10 bg-white/5 px-4 py-8 text-center">
                   <div>
                     <p
-                      className={`text-3xl font-black tracking-tight sm:text-4xl ${
-                        isSpinning ? "animate-pulse" : ""
-                      }`}
+                      className={`text-3xl font-black tracking-tight sm:text-4xl ${isSpinning ? "animate-pulse" : ""
+                        }`}
                     >
                       {currentUser?.name ?? spinningName}
                     </p>
