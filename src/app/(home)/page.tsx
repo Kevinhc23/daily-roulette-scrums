@@ -125,6 +125,20 @@ export default function Home() {
         ),
     [statusMap, users],
   )
+  const exportNoteEntries = useMemo(
+    () =>
+      filteredUsers
+        .map((user) => ({ user, status: statusMap[user.id] }))
+        .filter(({ status }) =>
+          Boolean(status?.note || status?.blocked || status?.unavailable || status?.startedAt),
+        )
+        .sort(
+          (left, right) =>
+            left.user.team.localeCompare(right.user.team) ||
+            left.user.name.localeCompare(right.user.name),
+        ),
+    [filteredUsers, statusMap],
+  )
 
   const clearSpinTimers = () => {
     if (intervalRef.current !== null) {
@@ -395,17 +409,18 @@ export default function Home() {
       "# Daily Roulette Notes",
       "",
       `Generated at: ${generatedAt}`,
-      `Total users: ${users.length}`,
-      `Blocked users: ${blockedUsers.length}`,
+      `Filter: ${selectedTeam === "ALL" ? "Todos los teams" : selectedTeam.replaceAll("_", " ")}`,
+      `Total users in filter: ${filteredUsers.length}`,
+      `Blocked users in filter: ${exportNoteEntries.filter(({ status }) => status?.blocked).length}`,
       "",
     ]
 
-    if (noteEntries.length === 0) {
-      lines.push("No notes or blockages recorded yet.")
+    if (exportNoteEntries.length === 0) {
+      lines.push("No notes or blockages recorded yet for this team.")
       return lines.join("\n")
     }
 
-    for (const { user, status } of noteEntries) {
+    for (const { user, status } of exportNoteEntries) {
       lines.push(`## ${user.name}`)
       lines.push(`- Email: ${user.email}`)
       lines.push(`- Team: ${user.team.replaceAll("_", " ")}`)
@@ -449,7 +464,7 @@ export default function Home() {
       return
     }
 
-    const rows = noteEntries
+    const rows = exportNoteEntries
       .map(
         ({ user, status }) => `
           <tr>
@@ -1112,7 +1127,7 @@ export default function Home() {
                       variant="secondary"
                       size="lg"
                       onClick={exportNotesMarkdown}
-                      disabled={!storageReady || noteEntries.length === 0}
+                      disabled={!storageReady || exportNoteEntries.length === 0}
                       className="w-full justify-center"
                     >
                       Exportar Markdown
@@ -1122,7 +1137,7 @@ export default function Home() {
                       variant="secondary"
                       size="lg"
                       onClick={exportNotesPdf}
-                      disabled={!storageReady || noteEntries.length === 0}
+                      disabled={!storageReady || exportNoteEntries.length === 0}
                       className="w-full justify-center"
                     >
                       Exportar PDF
