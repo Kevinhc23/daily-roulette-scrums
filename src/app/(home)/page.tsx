@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react"
+import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react"
 import { Badge, Button } from "@cloudflare/kumo"
 import { Role, TeamnName, type User } from "@/generated/prisma/browser"
 
@@ -27,6 +27,7 @@ type CreateUserForm = {
 }
 
 const STORAGE_KEY = "daily-roulette-status-v1"
+const DRAWN_STORAGE_KEY = "daily-roulette-drawn-v1"
 const spinDurationMs = 1800
 const spinTickMs = 85
 
@@ -58,17 +59,23 @@ export default function Home() {
   const [spinningName, setSpinningName] = useState("Listo para girar")
   const [isSpinning, setIsSpinning] = useState(false)
   const [statusMap, setStatusMap] = useState<UserStatusMap>({})
+  const [drawnUserIds, setDrawnUserIds] = useState<string[]>([])
   const [form, setForm] = useState<CreateUserForm>(initialForm)
 
   const intervalRef = useRef<number | null>(null)
   const timeoutRef = useRef<number | null>(null)
   const noteRef = useRef<HTMLTextAreaElement | null>(null)
   const hasLoadedStatusRef = useRef(false)
+  const hasLoadedDrawnRef = useRef(false)
 
   const filteredUsers = useMemo(() => {
     if (selectedTeam === "ALL") return users
     return users.filter((user) => user.team === selectedTeam)
   }, [selectedTeam, users])
+  const eligibleUsers = useMemo(
+    () => filteredUsers.filter((user) => !drawnUserIds.includes(user.id)),
+    [drawnUserIds, filteredUsers],
+  )
 
   const currentUser = useMemo(
     () => users.find((user) => user.id === currentUserId) ?? null,
@@ -124,9 +131,33 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      const raw = window.localStorage.getItem(DRAWN_STORAGE_KEY)
+      hasLoadedDrawnRef.current = true
+      if (!raw) return
+
+      try {
+        const parsed = JSON.parse(raw) as string[]
+        setDrawnUserIds(parsed)
+      } catch {
+        window.localStorage.removeItem(DRAWN_STORAGE_KEY)
+      }
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeout)
+    }
+  }, [])
+
+  useEffect(() => {
     if (!hasLoadedStatusRef.current) return
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(statusMap))
   }, [statusMap])
+
+  useEffect(() => {
+    if (!hasLoadedDrawnRef.current) return
+    window.localStorage.setItem(DRAWN_STORAGE_KEY, JSON.stringify(drawnUserIds))
+  }, [drawnUserIds])
 
   useEffect(() => {
     let active = true
@@ -152,6 +183,7 @@ export default function Home() {
           }
           return null
         })
+        setDrawnUserIds((current) => current.filter((id) => nextUsers.some((user) => user.id === id)))
       } catch (fetchError) {
         if (!active) return
         setError(fetchError instanceof Error ? fetchError.message : "Error desconocido")
@@ -185,6 +217,7 @@ export default function Home() {
 
     const nextUsers = payload.data ?? []
     setUsers(nextUsers)
+    setDrawnUserIds((current) => current.filter((id) => nextUsers.some((user) => user.id === id)))
     setCurrentUserId((current) => {
       if (preferredUserId && nextUsers.some((user) => user.id === preferredUserId)) {
         return preferredUserId
@@ -282,7 +315,12 @@ export default function Home() {
   }
 
   const spin = () => {
-    if (filteredUsers.length === 0 || isSpinning) return
+    if (eligibleUsers.length === 0 || isSpinning) {
+      if (filteredUsers.length > 0 && eligibleUsers.length === 0) {
+        setError("Ya salieron todos los usuarios de este filtro. Reinicia la ruleta para volver a empezar.")
+      }
+      return
+    }
 
     setError(null)
     setIsSpinning(true)
@@ -290,17 +328,27 @@ export default function Home() {
     clearSpinTimers()
 
     intervalRef.current = window.setInterval(() => {
-      const preview = filteredUsers[Math.floor(Math.random() * filteredUsers.length)]
+      const preview = eligibleUsers[Math.floor(Math.random() * eligibleUsers.length)]
       setSpinningName(preview.name)
     }, spinTickMs)
 
     timeoutRef.current = window.setTimeout(() => {
       clearSpinTimers()
-      const winner = filteredUsers[Math.floor(Math.random() * filteredUsers.length)]
+      const winner = eligibleUsers[Math.floor(Math.random() * eligibleUsers.length)]
       setSpinningName(winner.name)
       setCurrentUserId(winner.id)
+      setDrawnUserIds((current) =>
+        current.includes(winner.id) ? current : [...current, winner.id],
+      )
       setIsSpinning(false)
     }, spinDurationMs)
+  }
+
+  const resetRoulette = () => {
+    setDrawnUserIds([])
+    setCurrentUserId(null)
+    setSpinningName("Listo para girar")
+    setError(null)
   }
 
   const buildNotesMarkdown = () => {
@@ -459,6 +507,10 @@ export default function Home() {
               <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Usuarios</p>
                 <p className="mt-1 text-2xl font-semibold">{users.length}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Disponibles</p>
+                <p className="mt-1 text-2xl font-semibold">{eligibleUsers.length}</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Bloqueados</p>
@@ -626,10 +678,17 @@ export default function Home() {
                     const isSelected = user.id === currentUserId
 
                     return (
-                      <button
+                      <div
                         key={user.id}
-                        type="button"
                         onClick={() => setCurrentUserId(user.id)}
+                        onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault()
+                            setCurrentUserId(user.id)
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
                         className={`group rounded-2xl border p-4 text-left transition ${
                           isSelected
                             ? "border-blue-400 bg-blue-50 shadow-sm shadow-blue-100"
@@ -640,6 +699,11 @@ export default function Home() {
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
                               <h3 className="font-semibold text-slate-900">{user.name}</h3>
+                              {drawnUserIds.includes(user.id) ? (
+                                <Badge variant="warning" appearance="dot">
+                                  Ya salió
+                                </Badge>
+                              ) : null}
                               {status?.blocked ? (
                                 <Badge variant="error" appearance="dot">
                                   Bloqueado
@@ -679,7 +743,7 @@ export default function Home() {
                             Eliminar
                           </Button>
                         </div>
-                      </button>
+                      </div>
                     )
                   })
                 ) : (
@@ -740,19 +804,23 @@ export default function Home() {
                     variant="primary"
                     size="lg"
                     onClick={spin}
-                    disabled={filteredUsers.length === 0 || isSpinning}
+                    disabled={eligibleUsers.length === 0 || isSpinning}
                     className="justify-center"
                   >
-                    {isSpinning ? "Girando..." : "Disparar ruleta"}
+                    {isSpinning
+                      ? "Girando..."
+                      : eligibleUsers.length === 0
+                        ? "Sin disponibles"
+                        : "Disparar ruleta"}
                   </Button>
                   <Button
                     type="button"
                     variant="secondary"
                     size="lg"
-                    onClick={() => setCurrentUserId(null)}
+                    onClick={resetRoulette}
                     className="justify-center"
                   >
-                    Limpiar selección
+                    Reiniciar ruleta
                   </Button>
                 </div>
               </div>
