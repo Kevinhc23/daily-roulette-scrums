@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum TeamnName {
+  Martech
+  Knowledge_Base
+  GenAI_Product
+  GenAI_Engineering
+  Data
+  Marketing_Direct
+}
+
+enum Role {
+  Product_Manager
+  Developer
+  Marketing_Direct_Analyst
+  GenAI_Engineer
+  Devops
+  Application_Architect
+  Data_Engineer
+  Data_Architect
+  Tribe_Lead
+  Martech_Engineer
+  Chapter_Lead
+  Marketing_Direct_Lead
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
+  role      Role      @default(Developer)
+  team      TeamnName @default(Martech)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([email])
+}
