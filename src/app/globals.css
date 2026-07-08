@@ -34,3 +34,8 @@ html {
 body {
   min-height: 100%;
 }
+
+[data-base-ui-portal] > div[role="presentation"] {
+  background-color: rgb(2 6 23 / 0.78) !important;
+  backdrop-filter: blur(10px);
+}

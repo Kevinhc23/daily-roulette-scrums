@@ -1247,19 +1247,26 @@ export default function Home() {
         }}
         role="alertdialog"
       >
-        <Dialog className="p-6 sm:p-8">
-          <div className="space-y-3">
-            <Dialog.Title className="text-xl font-semibold text-slate-900">
-              Eliminar usuario
-            </Dialog.Title>
-            <Dialog.Description className="text-sm text-slate-600">
-              {deleteDialogUser
-                ? `Vas a eliminar a ${deleteDialogUser.name} del roster. Esta acción no se puede deshacer.`
-                : "Vas a eliminar este usuario del roster. Esta acción no se puede deshacer."}
-            </Dialog.Description>
+        <Dialog className="max-w-xl overflow-hidden border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl shadow-black/20">
+          <div className="border-b border-slate-200 bg-slate-50 px-6 py-5 sm:px-8">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-red-500/15 text-red-300 ring-1 ring-red-400/20">
+                !
+              </div>
+              <div className="min-w-0 space-y-2">
+                <Dialog.Title className="text-xl font-semibold tracking-tight text-slate-900">
+                  Eliminar usuario
+                </Dialog.Title>
+                <Dialog.Description className="text-sm leading-6 text-slate-600">
+                  {deleteDialogUser
+                    ? `Vas a eliminar a ${deleteDialogUser.name} del roster. Esta acción no se puede deshacer.`
+                    : "Vas a eliminar este usuario del roster. Esta acción no se puede deshacer."}
+                </Dialog.Description>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <div className="flex flex-col-reverse gap-3 px-6 py-5 sm:flex-row sm:justify-end sm:px-8">
             <Button
               type="button"
               variant="secondary"
@@ -1270,7 +1277,7 @@ export default function Home() {
             </Button>
             <Button
               type="button"
-              variant="secondary-destructive"
+              variant="destructive"
               onClick={() => {
                 void confirmDeleteUser()
               }}
@@ -1290,18 +1297,25 @@ export default function Home() {
         }}
         role="alertdialog"
       >
-        <Dialog className="p-6 sm:p-8">
-          <div className="space-y-3">
-            <Dialog.Title className="text-xl font-semibold text-slate-900">
-              Vaciar notas
-            </Dialog.Title>
-            <Dialog.Description className="text-sm text-slate-600">
-              Se borrará el contenido de las notas registradas para el filtro actual. Esta acción
-              no elimina usuarios ni bloqueos.
-            </Dialog.Description>
+        <Dialog className="max-w-xl overflow-hidden border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl shadow-black/20">
+          <div className="border-b border-slate-200 bg-slate-50 px-6 py-5 sm:px-8">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-300 ring-1 ring-amber-400/20">
+                !
+              </div>
+              <div className="min-w-0 space-y-2">
+                <Dialog.Title className="text-xl font-semibold tracking-tight text-slate-900">
+                  Vaciar notas
+                </Dialog.Title>
+                <Dialog.Description className="text-sm leading-6 text-slate-600">
+                  Se borrará el contenido de las notas registradas para el filtro actual. Esta
+                  acción no elimina usuarios ni bloqueos.
+                </Dialog.Description>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <div className="flex flex-col-reverse gap-3 px-6 py-5 sm:flex-row sm:justify-end sm:px-8">
             <Button
               type="button"
               variant="secondary"
