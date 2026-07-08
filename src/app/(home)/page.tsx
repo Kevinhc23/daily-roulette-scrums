@@ -12,6 +12,7 @@ type ApiResponse<T> = {
 
 type UserStatus = {
   blocked: boolean
+  unavailable: boolean
   note: string
   startedAt?: string
   updatedAt: string
@@ -73,8 +74,11 @@ export default function Home() {
     return users.filter((user) => user.team === selectedTeam)
   }, [selectedTeam, users])
   const eligibleUsers = useMemo(
-    () => filteredUsers.filter((user) => !drawnUserIds.includes(user.id)),
-    [drawnUserIds, filteredUsers],
+    () =>
+      filteredUsers.filter(
+        (user) => !drawnUserIds.includes(user.id) && !statusMap[user.id]?.unavailable,
+      ),
+    [drawnUserIds, filteredUsers, statusMap],
   )
 
   const currentUser = useMemo(
@@ -91,7 +95,9 @@ export default function Home() {
     () =>
       users
         .map((user) => ({ user, status: statusMap[user.id] }))
-        .filter(({ status }) => Boolean(status?.note || status?.blocked || status?.startedAt))
+        .filter(({ status }) =>
+          Boolean(status?.note || status?.blocked || status?.unavailable || status?.startedAt),
+        )
         .sort(
           (left, right) =>
             left.user.team.localeCompare(right.user.team) ||
@@ -234,12 +240,13 @@ export default function Home() {
   const updateStatus = (patch: Partial<UserStatus>) => {
     if (!currentUser) return
 
-    setStatusMap((current) => {
-      const previous = current[currentUser.id] ?? {
-        blocked: false,
-        note: "",
-        updatedAt: new Date().toISOString(),
-      }
+        setStatusMap((current) => {
+          const previous = current[currentUser.id] ?? {
+            blocked: false,
+            unavailable: false,
+            note: "",
+            updatedAt: new Date().toISOString(),
+          }
 
       return {
         ...current,
@@ -483,6 +490,16 @@ export default function Home() {
     updateStatus({ blocked: false })
   }
 
+  const toggleUnavailable = () => {
+    if (!currentUser) return
+
+    const currentStatusValue = statusMap[currentUser.id]?.unavailable ?? false
+    updateStatus({ unavailable: !currentStatusValue })
+    if (!currentStatusValue) {
+      setCurrentUserId(null)
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(32,78,224,0.18),_transparent_34%),linear-gradient(180deg,_#09111f_0%,_#0b1220_42%,_#f4f7fb_42%,_#f4f7fb_100%)] text-slate-900">
       <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
@@ -704,15 +721,46 @@ export default function Home() {
                                   Ya salió
                                 </Badge>
                               ) : null}
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  setCurrentUserId(user.id)
+                                  setStatusMap((current) => {
+                                    const previous = current[user.id] ?? {
+                                      blocked: false,
+                                      unavailable: false,
+                                      note: "",
+                                      updatedAt: new Date().toISOString(),
+                                    }
+
+                                    return {
+                                      ...current,
+                                      [user.id]: {
+                                        ...previous,
+                                        unavailable: !previous.unavailable,
+                                        updatedAt: new Date().toISOString(),
+                                      },
+                                    }
+                                  })
+                                }}
+                                className="rounded-full outline-none ring-offset-2 focus-visible:ring-2 focus-visible:ring-blue-500"
+                              >
+                                {status?.unavailable ? (
+                                  <Badge variant="warning" appearance="dot">
+                                    No disponible
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="success" appearance="dot">
+                                    Disponible
+                                  </Badge>
+                                )}
+                              </button>
                               {status?.blocked ? (
                                 <Badge variant="error" appearance="dot">
                                   Bloqueado
                                 </Badge>
-                              ) : (
-                                <Badge variant="success" appearance="dot">
-                                  Disponible
-                                </Badge>
-                              )}
+                              ) : null}
                               {isSelected ? (
                                 <Badge variant="blue">En foco</Badge>
                               ) : null}
@@ -843,6 +891,10 @@ export default function Home() {
                       <Badge variant="error" appearance="dot">
                         Bloqueado
                       </Badge>
+                    ) : currentStatus?.unavailable ? (
+                      <Badge variant="warning" appearance="dot">
+                        No disponible
+                      </Badge>
                     ) : currentUser ? (
                       <Badge variant="success" appearance="dot">
                         Activo
@@ -870,6 +922,15 @@ export default function Home() {
                       disabled={!currentUser}
                     >
                       Marcar bloqueado
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={toggleUnavailable}
+                      disabled={!currentUser}
+                    >
+                      {currentStatus?.unavailable ? "Marcar disponible" : "Marcar no disponible"}
                     </Button>
                     <Button
                       type="button"
