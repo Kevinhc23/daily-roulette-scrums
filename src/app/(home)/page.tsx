@@ -967,14 +967,14 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <Button
                     type="button"
                     variant="primary"
                     size="lg"
                     onClick={spin}
                     disabled={eligibleUsers.length === 0 || isSpinning}
-                    className="justify-center"
+                    className="h-14 w-full justify-center px-6 text-base font-semibold sm:text-lg"
                   >
                     {isSpinning
                       ? "Girando..."
@@ -987,7 +987,7 @@ export default function Home() {
                     variant="secondary"
                     size="lg"
                     onClick={resetRoulette}
-                    className="justify-center"
+                    className="h-14 w-full justify-center px-6 text-base font-semibold sm:text-lg"
                   >
                     Reiniciar ruleta
                   </Button>
