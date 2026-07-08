@@ -108,8 +108,8 @@ export default function Home() {
       })()
     : null
   const blockedUsers = useMemo(
-    () => users.filter((user) => statusMap[user.id]?.blocked),
-    [statusMap, users],
+    () => filteredUsers.filter((user) => statusMap[user.id]?.blocked),
+    [filteredUsers, statusMap],
   )
   const noteEntries = useMemo(
     () =>
@@ -411,7 +411,7 @@ export default function Home() {
       `Generated at: ${generatedAt}`,
       `Filter: ${selectedTeam === "ALL" ? "Todos los teams" : selectedTeam.replaceAll("_", " ")}`,
       `Total users in filter: ${filteredUsers.length}`,
-      `Blocked users in filter: ${exportNoteEntries.filter(({ status }) => status?.blocked).length}`,
+      `Blocked users in filter: ${blockedUsers.length}`,
       "",
     ]
 
@@ -491,7 +491,7 @@ export default function Home() {
         <body>
           <h1>Daily Roulette Notes</h1>
           <p>Generated at: ${new Date().toISOString()}</p>
-          <p>Total users: ${users.length} | Blocked users: ${blockedUsers.length}</p>
+          <p>Total users in filter: ${filteredUsers.length} | Blocked users in filter: ${blockedUsers.length}</p>
           <table>
             <thead>
               <tr>
