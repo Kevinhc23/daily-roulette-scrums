@@ -458,12 +458,6 @@ export default function Home() {
   }
 
   const exportNotesPdf = () => {
-    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=1024,height=900")
-    if (!printWindow) {
-      setError("No se pudo abrir la ventana de impresión")
-      return
-    }
-
     const rows = exportNoteEntries
       .map(
         ({ user, status }) => `
@@ -517,22 +511,39 @@ export default function Home() {
       </html>
     `
 
-    printWindow.document.open()
-    printWindow.document.write(html)
-    printWindow.document.close()
+    const iframe = document.createElement("iframe")
+    iframe.setAttribute("aria-hidden", "true")
+    iframe.style.position = "fixed"
+    iframe.style.right = "0"
+    iframe.style.bottom = "0"
+    iframe.style.width = "0"
+    iframe.style.height = "0"
+    iframe.style.border = "0"
+    iframe.style.visibility = "hidden"
+    iframe.srcdoc = html
 
-    const triggerPrint = () => {
-      printWindow.focus()
-      printWindow.print()
+    const cleanup = () => {
+      window.setTimeout(() => {
+        iframe.remove()
+      }, 1000)
     }
 
-    if (printWindow.document.readyState === "complete") {
-      window.setTimeout(triggerPrint, 200)
-    } else {
-      printWindow.addEventListener("load", () => {
-        window.setTimeout(triggerPrint, 200)
-      }, { once: true })
+    iframe.onload = () => {
+      const printFrame = iframe.contentWindow
+      if (!printFrame) {
+        cleanup()
+        setError("No se pudo preparar la impresión")
+        return
+      }
+
+      printFrame.focus()
+      window.setTimeout(() => {
+        printFrame.print()
+        cleanup()
+      }, 200)
     }
+
+    document.body.appendChild(iframe)
   }
 
   const saveNote = () => {
